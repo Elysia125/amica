@@ -21,7 +21,7 @@ import { VRMHumanBoneName } from "@pixiv/three-vrm";
 import GUI from "lil-gui";
 import Stats from "stats.js";
 
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { InteractiveGroup } from "three/examples/jsm/interactive/InteractiveGroup.js";
 import { HTMLMesh } from "three/examples/jsm/interactive/HTMLMesh.js";
 
@@ -120,12 +120,14 @@ export class Viewer {
   private elapsedMsMid: number = 0;
   private elapsedMsSlow: number = 0;
   private scene?: THREE.Scene;
-  private camera?: THREE.PerspectiveCamera;
-  private cameraControls?: OrbitControls;
+  public camera?: THREE.PerspectiveCamera;
+  public cameraControls?: OrbitControls;
   private stats?: Stats;
   private statsMesh?: THREE.Mesh;
   private gui?: GUI;
   private guiMesh?: THREE.Mesh;
+
+  private petRoot?: THREE.Group;
 
   private sendScreenshotToCallback: boolean;
   private screenshotCallback: BlobCallback | undefined;
@@ -726,7 +728,10 @@ export class Viewer {
       this.scene!.add(this.modelBVHHelper);
     }
 
-    this.scene!.add(this.model.vrm.scene);
+    // Wrap VRM scene in a Group so rotation/scale persist across animation updates
+    this.petRoot = new THREE.Group();
+    this.petRoot.add(this.model.vrm.scene);
+    this.scene!.add(this.petRoot);
 
     // TODO since poses still work for procedural animation, we can use this to debug
     if (config("animation_procedural") !== "true") {
@@ -769,7 +774,12 @@ export class Viewer {
 
   public unloadVRM(): void {
     if (this.model?.vrm) {
-      this.scene!.remove(this.model.vrm.scene);
+      if (this.petRoot) {
+        this.scene!.remove(this.petRoot);
+        this.petRoot = undefined;
+      } else {
+        this.scene!.remove(this.model.vrm.scene);
+      }
       // TODO if we don't dispose and create a new geometry then it seems like the performance gets slower
       {
         const geometry = this.modelMeshHelper?.geometry;
@@ -1005,6 +1015,80 @@ export class Viewer {
     this.camera?.position.lerpVectors(this.camera?.position, newPosition, 0);
     // this.cameraControls?.target.lerpVectors(this.cameraControls?.target,headWPos,0.5);
     // this.cameraControls?.update();
+  }
+
+  public adjustForPet() {
+    if (!this.model?.vrm) return;
+
+    this.model.vrm.scene.updateMatrixWorld(true);
+    const box = new THREE.Box3().setFromObject(this.model.vrm.scene, true);
+    const center = box.getCenter(new THREE.Vector3());
+    const modelHeight = box.max.y - box.min.y;
+    const distance = Math.max(modelHeight * 3.5, 5);
+
+    if (this.camera) {
+      this.camera.position.set(center.x, center.y, center.z + distance);
+    }
+    if (this.cameraControls) {
+      this.cameraControls.target.set(center.x, center.y, center.z);
+      this.cameraControls.minDistance = distance * 0.3;
+      this.cameraControls.maxDistance = distance * 3;
+      this.cameraControls.update();
+    }
+  }
+
+  /** Same OrbitControls as main viewer, but LEFT reserved for Tauri window drag */
+  public configureForPet() {
+    if (!this.cameraControls) return;
+    this.cameraControls.enabled = true;
+    this.cameraControls.mouseButtons.LEFT = null;       // Tauri window drag
+    this.cameraControls.mouseButtons.MIDDLE = THREE.MOUSE.DOLLY;
+    this.cameraControls.mouseButtons.RIGHT = THREE.MOUSE.ROTATE;
+    this.cameraControls.touches.ONE = THREE.TOUCH.ROTATE;
+    this.cameraControls.touches.TWO = THREE.TOUCH.DOLLY_PAN;
+  }
+
+  /** Project scene to pixels — call once for initial window size */
+  public getPetWindowSize(padding = 60): { width: number; height: number } | null {
+    if (!this.model?.vrm || !this.camera || !this.renderer) return null;
+
+    this.model.vrm.scene.updateMatrixWorld(true);
+    const box = new THREE.Box3().setFromObject(this.model.vrm.scene, true);
+
+    const corners = [
+      new THREE.Vector3(box.min.x, box.min.y, box.min.z),
+      new THREE.Vector3(box.min.x, box.min.y, box.max.z),
+      new THREE.Vector3(box.min.x, box.max.y, box.min.z),
+      new THREE.Vector3(box.min.x, box.max.y, box.max.z),
+      new THREE.Vector3(box.max.x, box.min.y, box.min.z),
+      new THREE.Vector3(box.max.x, box.min.y, box.max.z),
+      new THREE.Vector3(box.max.x, box.max.y, box.min.z),
+      new THREE.Vector3(box.max.x, box.max.y, box.max.z),
+    ];
+
+    const w = this.renderer.domElement.clientWidth;
+    const h = this.renderer.domElement.clientHeight;
+
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    for (const corner of corners) {
+      const projected = corner.clone().project(this.camera);
+      if (projected.z > 1) continue;
+      const sx = (projected.x * 0.5 + 0.5) * w;
+      const sy = (-projected.y * 0.5 + 0.5) * h;
+      minX = Math.min(minX, sx);
+      maxX = Math.max(maxX, sx);
+      minY = Math.min(minY, sy);
+      maxY = Math.max(maxY, sy);
+    }
+
+    const modelW = maxX - minX;
+    const modelH = maxY - minY;
+    if (modelW <= 0 || modelH <= 0) return null;
+
+    return {
+      width: Math.max(200, Math.ceil(modelW + padding * 2)),
+      height: Math.max(300, Math.ceil(modelH + padding * 2)),
+    };
   }
 
   public hslToRgb(h: number, s: number, l: number) {

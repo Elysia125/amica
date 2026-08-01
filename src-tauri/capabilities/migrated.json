@@ -3,10 +3,12 @@
   "description": "permissions that were migrated from v1",
   "local": true,
   "windows": [
-    "main"
+    "main",
+    "pet"
   ],
   "permissions": [
     "core:default",
-    "opener:allow-open-url"
+    "opener:allow-open-url",
+    "core:window:allow-start-dragging"
   ]
 }

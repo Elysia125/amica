@@ -4,22 +4,51 @@
 use tauri::{
     menu::{MenuBuilder, MenuItemBuilder, PredefinedMenuItem},
     tray::TrayIconBuilder,
+    WebviewWindowBuilder,
 };
 use tauri::Manager;
 use tauri_plugin_opener::OpenerExt;
 
 #[tauri::command]
 async fn close_splashscreen(window: tauri::WebviewWindow) {
-    window
-        .get_webview_window("splashscreen")
-        .expect("no window labeled 'splashscreen' found")
-        .close()
-        .unwrap();
-    window
-        .get_webview_window("main")
-        .expect("no window labeled 'main' found")
-        .show()
-        .unwrap();
+    if let Some(splash) = window.get_webview_window("splashscreen") {
+        let _ = splash.close();
+    }
+    if let Some(main) = window.get_webview_window("main") {
+        let _ = main.show();
+    }
+}
+
+#[tauri::command]
+async fn create_pet_window(app: tauri::AppHandle) -> Result<(), String> {
+    if let Some(pet) = app.get_webview_window("pet") {
+        let _ = pet.show();
+        let _ = pet.set_focus();
+        return Ok(());
+    }
+
+    WebviewWindowBuilder::new(&app, "pet", tauri::WebviewUrl::App("/pet".into()))
+        .title("Amica Pet")
+        .inner_size(400.0, 600.0)
+        .decorations(false)
+        .transparent(true)
+        .shadow(false)
+        .always_on_top(true)
+        .skip_taskbar(true)
+        .resizable(true)
+        .visible(true)
+        .build()
+        .map_err(|e| e.to_string())?;
+
+    Ok(())
+}
+
+#[tauri::command]
+async fn close_pet_window(app: tauri::AppHandle) -> Result<(), String> {
+    if let Some(pet) = app.get_webview_window("pet") {
+        let _ = pet.close();
+    }
+    Ok(())
 }
 
 fn main() {
@@ -60,7 +89,7 @@ fn main() {
 
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![close_splashscreen])
+        .invoke_handler(tauri::generate_handler![close_splashscreen, create_pet_window, close_pet_window])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

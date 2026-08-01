@@ -11,6 +11,8 @@ import { clsx } from "clsx";
 import { M_PLUS_2, Montserrat } from "next/font/google";
 import { useTranslation, Trans } from 'react-i18next';
 import {
+  ArrowsPointingInIcon,
+  ArrowsPointingOutIcon,
   ChatBubbleLeftIcon,
   ChatBubbleLeftRightIcon,
   CloudArrowDownIcon,
@@ -55,6 +57,7 @@ import { AlertContext } from "@/features/alert/alertContext";
 
 import { config, updateConfig } from '@/utils/config';
 import { isTauri } from '@/utils/isTauri';
+import { invoke } from "@tauri-apps/api/core";
 import { langs } from '@/i18n/langs';
 import { VrmStoreProvider } from "@/features/vrmStore/vrmStoreContext";
 import { AmicaLifeContext } from "@/features/amicaLife/amicaLifeContext";
@@ -148,6 +151,7 @@ export default function Home() {
   const [showLanguageSelector, setShowLanguageSelector] = useState(false);
 
   const [showStreamWindow, setShowStreamWindow] = useState(false);
+  const [isPetDetached, setIsPetDetached] = useState(false);
   const videoRef = useRef(null);
 
   const [isARSupported, setIsARSupported] = useState(false);
@@ -225,6 +229,16 @@ export default function Home() {
   
   const toggleChatMode = () => {
     toggleState(setShowChatMode, [setShowChatLog, setShowSubconciousText]);
+  };
+
+  const togglePetWindow = async () => {
+    if (isPetDetached) {
+      setIsPetDetached(false);
+      if (isTauri()) await invoke("close_pet_window");
+    } else {
+      if (isTauri()) await invoke("create_pet_window");
+      setIsPetDetached(true);
+    }
   };
 
   const toggleXR = async (immersiveType: XRSessionMode) => {
@@ -370,7 +384,7 @@ export default function Home() {
       { config("chatbot_backend") === "moshi" && <Moshi setAssistantText={setAssistantMessage}/>  }
 
       <VrmStoreProvider>
-        <VrmViewer chatMode={showChatMode}/>
+        {!isPetDetached && <VrmViewer chatMode={showChatMode}/>}
         {showSettings && (
           <Settings
             onClickClose={() => setShowSettings(false)}
@@ -452,6 +466,24 @@ export default function Home() {
               href="/import"
               label="import"
             />
+
+            {isTauri() && (
+              isPetDetached ? (
+                <MenuButton
+                  large={isVRHeadset}
+                  icon={ArrowsPointingInIcon}
+                  onClick={togglePetWindow}
+                  label="attach pet"
+                />
+              ) : (
+                <MenuButton
+                  large={isVRHeadset}
+                  icon={ArrowsPointingOutIcon}
+                  onClick={togglePetWindow}
+                  label="detach pet"
+                />
+              )
+            )}
 
             { showSubconciousText ? (
               <MenuButton

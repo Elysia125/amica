@@ -5,6 +5,8 @@ import { updateConfig } from "@/utils/config";
 import { TextButton } from "@/components/textButton";
 import { VrmData } from '@/features/vrmStore/vrmData';
 import { Viewer } from '@/features/vrmViewer/viewer';
+import { isTauri } from "@/utils/isTauri";
+import { emit } from "@tauri-apps/api/event";
 
 export function CharacterModelPage({
   viewer,
@@ -56,6 +58,7 @@ export function CharacterModelPage({
                   updateConfig('vrm_url', vrm.url);
                   setVrmUrl(vrm.url);
                 }
+                if (isTauri()) emit('vrm-changed', { url: vrm.url });
                 setSettingsUpdated(true);
               }}
               className={clsx(
