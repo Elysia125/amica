@@ -79,7 +79,7 @@ async function handleRequest(
         if (payload) {
           const filePath = payload.filepath;
           const fileBuffer = fs.readFileSync(filePath);
-          const audioFile = new File([fileBuffer], "input.wav", { type: "audio/wav" });
+          const audioFile = new File([new Uint8Array(fileBuffer)], "input.wav", { type: "audio/wav" });
           response = await transcribeVoice(audioFile);
           outputType = "Text";
         } else {
