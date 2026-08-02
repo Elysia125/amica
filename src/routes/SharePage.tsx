@@ -1,7 +1,6 @@
 import { createHash } from 'crypto';
-import Link from 'next/link';
-import { useRouter } from 'next/router';
 import { useContext, useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
 import { config, updateConfig } from '@/utils/config';
@@ -10,7 +9,6 @@ import { FilePond, registerPlugin } from 'react-filepond';
 import { ViewerContext } from "@/features/vrmViewer/viewerContext";
 import VrmDemo from "@/components/vrmDemo";
 import { loadVRMAnimation } from "@/lib/VRMAnimation/loadVRMAnimation";
-
 
 import FilePondPluginImagePreview from 'filepond-plugin-image-preview';
 import FilePondPluginFileValidateType from 'filepond-plugin-file-validate-type';
@@ -58,7 +56,7 @@ function vrmDetector(source: File, type: string): Promise<string> {
   })
 }
 
-export default function Share() {
+export default function SharePage() {
   const { t } = useTranslation();
   const { viewer } = useContext(ViewerContext);
 
@@ -84,10 +82,11 @@ export default function Share() {
   const [vrmLoadingFromIndexedDb, setVrmLoadingFromIndexedDb] = useState(false);
   const [showUploadLocalVrmMessage, setShowUploadLocalVrmMessage] = useState(false);
 
-
   const [sqid, setSqid] = useState('');
 
   const vrmUploadFilePond = useRef<FilePond | null>(null);
+
+  const navigate = useNavigate();
 
   const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
@@ -134,7 +133,7 @@ export default function Share() {
     setIsRegistering(true);
 
     async function register() {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_AMICA_API_URL}/api/add_character`, {
+      const res = await fetch(`${import.meta.env.VITE_AMICA_API_URL}/api/add_character`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -163,10 +162,8 @@ export default function Share() {
     register();
   }
 
-  const router = useRouter();
-
   const handleCloseIcon = () => {
-    router.push('/');
+    navigate('/');
   };
 
   useEffect(() => {
@@ -177,18 +174,15 @@ export default function Share() {
   }, []);
 
   return (
-    
     <div className="p-10 md:p-20">
-      <style jsx global>
-        {`
+      <style>{`
         body {
           background-image: url('/liquid-metaballs.jpg');
           background-size: cover;
           background-repeat: no-repeat;
           background-position: bottom right;
         }
-      `}
-      </style>
+      `}</style>
       <div className="fixed top-0 left-0 w-full max-h-full text-black text-xs text-left z-20">
         <div className="p-2 bg-white">
             <IconButton
@@ -289,12 +283,10 @@ export default function Share() {
               />
               <FilePond
                 files={bgFiles}
-                // this is done to remove type error
-                // filepond is not typed properly
                 onupdatefiles={(files: any) => {
                   setBgFiles(files);
                 }}
-                server={`${process.env.NEXT_PUBLIC_AMICA_API_URL}/api/upload?type=bgimg`}
+                server={`${import.meta.env.VITE_AMICA_API_URL}/api/upload?type=bgimg`}
                 name="file"
                 labelIdle='.png & .jpg files only<br />click or drag & drop'
                 acceptedFileTypes={['image/png', 'image/jpeg']}
@@ -303,7 +295,6 @@ export default function Share() {
                     console.error(err);
                     return;
                   }
-
                   setBgUrl('');
                 }}
                 onprocessfile={(err, file) => {
@@ -311,12 +302,10 @@ export default function Share() {
                     console.error(err);
                     return;
                   }
-
                   async function handleFile(file: File) {
                     const hashValue = await hashFile(file);
-                    setBgUrl(`${process.env.NEXT_PUBLIC_AMICA_STORAGE_URL}/${hashValue}`);
+                    setBgUrl(`${import.meta.env.VITE_AMICA_STORAGE_URL}/${hashValue}`);
                   }
-
                   handleFile(file.file as File);
                 }}
                 disabled={!!sqid}
@@ -385,12 +374,10 @@ export default function Share() {
               <FilePond
                 ref={vrmUploadFilePond}
                 files={vrmFiles}
-                // this is done to remove type error
-                // filepond is not typed properly
                 onupdatefiles={(files: any) => {
                   setVrmFiles(files);
                 }}
-                server={`${process.env.NEXT_PUBLIC_AMICA_API_URL}/api/upload?type=vrm`}
+                server={`${import.meta.env.VITE_AMICA_API_URL}/api/upload?type=vrm`}
                 name="file"
                 labelIdle='.vrm files only<br />click or drag & drop'
                 acceptedFileTypes={['model/gltf-binary']}
@@ -404,7 +391,6 @@ export default function Share() {
                     console.error(err);
                     return;
                   }
-
                   setVrmUrl('');
                   setVrmLoaded(false);
                 }}
@@ -413,10 +399,9 @@ export default function Share() {
                     console.error(err);
                     return;
                   }
-
                   async function handleFile(file: File) {
                     const hashValue = await hashFile(file);
-                    const url = `${process.env.NEXT_PUBLIC_AMICA_STORAGE_URL}/${hashValue}`;
+                    const url = `${import.meta.env.VITE_AMICA_STORAGE_URL}/${hashValue}`;
                     setVrmUrl(url);
                     updateVrmAvatar(viewer, url);
                     if (vrmSaveType == 'local') {
@@ -425,7 +410,6 @@ export default function Share() {
                     }
                     setVrmLoaded(false);
                   }
-
                   handleFile(file.file as File);
                 }}
                 disabled={!!sqid}
@@ -460,61 +444,6 @@ export default function Share() {
             </div>
           </div>
 
-          {/*
-          <div className="sm:col-span-3 max-w-md rounded-xl mt-4">
-            <label className="block text-sm font-medium leading-6 text-gray-900">
-              Animation Url
-            </label>
-            <div className="mt-2">
-              <input
-                type="text"
-                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                value={animationUrl}
-                readOnly={!! sqid}
-                onChange={(e) => {
-                  setAnimationUrl(e.target.value);
-                }}
-              />
-              <FilePond
-                files={animationFiles}
-                // this is done to remove type error
-                // filepond is not typed properly
-                onupdatefiles={(files: any) => {
-                  setAnimationFiles(files);
-                }}
-                // TODO read this url from env
-                server={`${process.env.NEXT_PUBLIC_AMICA_API_URL}/api/upload?type=anim`}
-                name="file"
-                labelIdle='.vrm files only<br />click or drag & drop'
-                acceptedFileTypes={['model/gltf-binary']}
-                fileValidateTypeDetectType={vrmDetector}
-                onremovefile={(err, file) => {
-                  if (err) {
-                    console.error(err);
-                    return;
-                  }
-
-                  setAnimationUrl('');
-                }}
-                onprocessfile={(err, file) => {
-                  if (err) {
-                    console.error(err);
-                    return;
-                  }
-
-                  async function handleFile(file: File) {
-                    const hashValue = await hashFile(file);
-                    setAnimationUrl(`${process.env.NEXT_PUBLIC_AMICA_STORAGE_URL}/${hashValue}`);
-                  }
-
-                  handleFile(file.file as File);
-                }}
-                disabled={!! sqid}
-              />
-            </div>
-          </div>
-          */}
-
           <div className="sm:col-span-3 max-w-md rounded-xl mt-4">
             <label className="block text-sm font-medium leading-6 text-gray-900">
               Voice Url
@@ -531,12 +460,10 @@ export default function Share() {
               />
               <FilePond
                 files={voiceFiles}
-                // this is done to remove type error
-                // filepond is not typed properly
                 onupdatefiles={(files: any) => {
                   setVoiceFiles(files);
                 }}
-                server={`${process.env.NEXT_PUBLIC_AMICA_API_URL}/api/upload?type=voice`}
+                server={`${import.meta.env.VITE_AMICA_API_URL}/api/upload?type=voice`}
                 name="file"
                 labelIdle='.wav & .mp3 files only<br />click or drag & drop'
                 acceptedFileTypes={['audio/wav', 'audio/mpeg']}
@@ -545,7 +472,6 @@ export default function Share() {
                     console.error(err);
                     return;
                   }
-
                   setVoiceUrl('');
                 }}
                 onprocessfile={(err, file) => {
@@ -553,12 +479,10 @@ export default function Share() {
                     console.error(err);
                     return;
                   }
-
                   async function handleFile(file: File) {
                     const hashValue = await hashFile(file);
-                    setVoiceUrl(`${process.env.NEXT_PUBLIC_AMICA_STORAGE_URL}/${hashValue}`);
+                    setVoiceUrl(`${import.meta.env.VITE_AMICA_STORAGE_URL}/${hashValue}`);
                   }
-
                   handleFile(file.file as File);
                 }}
                 disabled={!!sqid}
@@ -594,22 +518,22 @@ export default function Share() {
               <p className="mt-6 text-sm">
                 {t("Or, you can share this direct link:")}
                 {' '}
-                <Link
+                <a
                   href={`https://amica.arbius.ai/import/${sqid}`}
                   target={isTauri() ? "_blank" : ''}
                   className="text-cyan-600 hover:text-cyan-700"
                 >
                   https://amica.arbius.ai/import/{sqid}
-                </Link>
+                </a>
               </p>
 
-              <Link href="/">
+              <a href="#/">
                 <button
                   className="mt-6 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-emerald-500 hover:bg-emerald-600 focus:outline-none disabled:opacity-50 disabled:hover:bg-emerald-500 disabled:cursor-not-allowed"
                 >
                   {t("Return Home")}
                 </button>
-              </Link>
+              </a>
             </div>
           )}
         </div>

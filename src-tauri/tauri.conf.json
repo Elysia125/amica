@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/schema.json",
   "build": {
-    "beforeBuildCommand": "export NEXT_OUTPUT=\"export\" && npm run build && npm run splash",
+    "beforeBuildCommand": "npm run build",
     "beforeDevCommand": "npm run dev",
     "frontendDist": "../out",
     "devUrl": "http://localhost:3000"

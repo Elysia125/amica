@@ -1,7 +1,6 @@
 import { useContext, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import Link from 'next/link';
-import { useRouter } from 'next/router';
+import { useParams, useNavigate } from 'react-router-dom';
 import { updateConfig, defaultConfig } from '@/utils/config';
 import { isTauri } from '@/utils/isTauri';
 import VrmDemo from "@/components/vrmDemo";
@@ -9,9 +8,10 @@ import { supabase } from '@/utils/supabase';
 import { vrmDataProvider } from '@/features/vrmStore/vrmDataProvider';
 import { BlobToBase64 } from '@/utils/blobDataUtils';
 
-export default function Import() {
+export default function ImportSqidPage() {
   const { t } = useTranslation();
-  const router = useRouter()
+  const params = useParams<{ sqid: string }>();
+  const navigate = useNavigate();
 
   const [description, setDescription] = useState('');
   const [name, setName] = useState('');
@@ -39,7 +39,7 @@ export default function Import() {
       const { data, error } = await supabase
         .from('characters')
         .select(`description, name, system_prompt, vision_system_prompt, bg_url, youtube_videoid, vrm_url, animation_url, voice_url`)
-        .eq('sqid', router.query.sqid)
+        .eq('sqid', params.sqid)
         .single();
 
       if (error || ! data) {
@@ -72,12 +72,10 @@ export default function Import() {
       setLoaded(true);
     }
 
-    // dont allow undefined / first time
-    if (router.query.sqid) {
+    if (params.sqid) {
       getCharacter();
     }
-  }, [router]);
-
+  }, [params.sqid]);
 
   function overrideConfig() {
     if (name) {
@@ -144,16 +142,15 @@ export default function Import() {
             <p className="mt-8">
               {t("Try again later.")}
               {' '}
-              <Link href="/" className="text-cyan-500">{t("Click here")}</Link>
+              <a href="#/" className="text-cyan-500">{t("Click here")}</a>
               {' '}
               {t("to return to homepage.")}
             </p>
-
           </div>
         )}
         {! error && loaded && (
           <h1 className="text-lg">
-            {t("Import")} {loaded ? (`“${name}”` || 'Amica') : '...'}
+            {t("Import")} {loaded ? (`"${name}"` || 'Amica') : '...'}
           </h1>
         )}
       </div>
@@ -178,9 +175,8 @@ export default function Import() {
                 <div className="sm:col-span-3 max-w-md rounded-xl mt-2">
                   <button
                     onClick={async () => {
-                      await 
-                      overrideConfig();
-                      window.location.href = '/';
+                      await overrideConfig();
+                      navigate('/');
                       setButtonDisabled(true);
                     }}
                     className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-fuchsia-500 hover:bg-fuchsia-600 focus:outline-none ml-2"
@@ -192,13 +188,13 @@ export default function Import() {
 
                 { isTauri() && (
                   <div className="sm:col-span-3 max-w-md rounded-xl mt-2">
-                    <Link href="/">
+                    <a href="#/">
                       <button
                         className="mt-6 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-500 hover:bg-red-600 focus:outline-none disabled:opacity-50 disabled:hover:bg-red-500 disabled:cursor-not-allowed ml-2"
                       >
                         {t("Cancel")}
                       </button>
-                    </Link>
+                    </a>
                   </div>
                 ) }
               </>

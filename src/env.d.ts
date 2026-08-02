@@ -1,21 +1,97 @@
-declare namespace NodeJS {
-  interface ProcessEnv {
-    // OpenRouter Configuration
-    NEXT_PUBLIC_OPENROUTER_APIKEY?: string;
-    NEXT_PUBLIC_OPENROUTER_URL?: string;
-    NEXT_PUBLIC_OPENROUTER_MODEL?: string;
+/// <reference types="vite/client" />
 
-    // Existing environment variables (preserving for type safety)
-    NEXT_PUBLIC_CHATBOT_BACKEND?: string;
-    NEXT_PUBLIC_OPENAI_APIKEY?: string;
-    NEXT_PUBLIC_OPENAI_URL?: string;
-    NEXT_PUBLIC_OPENAI_MODEL?: string;
-    NEXT_PUBLIC_LLAMACPP_URL?: string;
-    NEXT_PUBLIC_LLAMACPP_STOP_SEQUENCE?: string;
-    NEXT_PUBLIC_OLLAMA_URL?: string;
-    NEXT_PUBLIC_OLLAMA_MODEL?: string;
-    NEXT_PUBLIC_KOBOLDAI_URL?: string;
-    NEXT_PUBLIC_KOBOLDAI_USE_EXTRA?: string;
-    NEXT_PUBLIC_KOBOLDAI_STOP_SEQUENCE?: string;
-  }
+interface ImportMetaEnv {
+  readonly VITE_DEVELOPMENT_BASE_URL?: string;
+  readonly VITE_AMICA_API_URL?: string;
+  readonly VITE_AMICA_STORAGE_URL?: string;
+  readonly VITE_SUPABASE_URL?: string;
+  readonly VITE_SUPABASE_ANON_KEY?: string;
+  readonly VITE_LOCALXTTS_URL?: string;
+  readonly VITE_ALLTALK_VERSION?: string;
+  readonly VITE_ALLTALK_VOICE?: string;
+  readonly VITE_ALLTALK_LANGUAGE?: string;
+  readonly VITE_ALLTALK_RVC_VOICE?: string;
+  readonly VITE_ALLTALK_RVC_PITCH?: string;
+  readonly VITE_LANGUAGE?: string;
+  readonly VITE_SHOW_INTRODUCTION?: string;
+  readonly VITE_SHOW_ARBIUS_INTRODUCTION?: string;
+  readonly VITE_SHOW_ADD_TO_HOMESCREEN?: string;
+  readonly VITE_BG_COLOR?: string;
+  readonly VITE_BG_URL?: string;
+  readonly VITE_VRM_HASH?: string;
+  readonly VITE_ANIMATION_URL?: string;
+  readonly VITE_ANIMATION_PROCEDURAL?: string;
+  readonly VITE_VOICE_URL?: string;
+  readonly VITE_CHATBOT_BACKEND?: string;
+  readonly VITE_ARBIUS_LLM_MODEL_ID?: string;
+  readonly VITE_OPENAI_APIKEY?: string;
+  readonly VITE_OPENAI_URL?: string;
+  readonly VITE_OPENAI_MODEL?: string;
+  readonly VITE_LLAMACPP_URL?: string;
+  readonly VITE_LLAMACPP_STOP_SEQUENCE?: string;
+  readonly VITE_OLLAMA_URL?: string;
+  readonly VITE_OLLAMA_MODEL?: string;
+  readonly VITE_KOBOLDAI_URL?: string;
+  readonly VITE_KOBOLDAI_USE_EXTRA?: string;
+  readonly VITE_KOBOLDAI_STOP_SEQUENCE?: string;
+  readonly VITE_MOSHI_URL?: string;
+  readonly VITE_OPENROUTER_APIKEY?: string;
+  readonly VITE_OPENROUTER_URL?: string;
+  readonly VITE_OPENROUTER_MODEL?: string;
+  readonly VITE_TTS_BACKEND?: string;
+  readonly VITE_STT_BACKEND?: string;
+  readonly VITE_VISION_BACKEND?: string;
+  readonly VITE_VISION_SYSTEM_PROMPT?: string;
+  readonly VITE_VISION_OPENAI_APIKEY?: string;
+  readonly VITE_VISION_OPENAI_URL?: string;
+  readonly VITE_VISION_OPENAI_MODEL?: string;
+  readonly VITE_VISION_LLAMACPP_URL?: string;
+  readonly VITE_VISION_OLLAMA_URL?: string;
+  readonly VITE_VISION_OLLAMA_MODEL?: string;
+  readonly VITE_WHISPERCPP_URL?: string;
+  readonly VITE_OPENAI_WHISPER_APIKEY?: string;
+  readonly VITE_OPENAI_WHISPER_URL?: string;
+  readonly VITE_OPENAI_WHISPER_MODEL?: string;
+  readonly VITE_OPENAI_TTS_APIKEY?: string;
+  readonly VITE_OPENAI_TTS_URL?: string;
+  readonly VITE_OPENAI_TTS_MODEL?: string;
+  readonly VITE_OPENAI_TTS_VOICE?: string;
+  readonly VITE_RVC_URL?: string;
+  readonly VITE_RVC_ENABLED?: string;
+  readonly VITE_RVC_MODEL_NAME?: string;
+  readonly VITE_RVC_F0_UPKEY?: string;
+  readonly VITE_RVC_METHOD?: string;
+  readonly VITE_RVC_INDEX_PATH?: string;
+  readonly VITE_RVC_INDEX_RATE?: string;
+  readonly VITE_RVC_FILTER_RADIUS?: string;
+  readonly VITE_RVC_RESAMPLE_SR?: string;
+  readonly VITE_RVC_RMS_MIX_RATE?: string;
+  readonly VITE_RVC_PROTECT?: string;
+  readonly VITE_COQUILOCAL_URL?: string;
+  readonly VITE_COQUILOCAL_VOICEID?: string;
+  readonly VITE_KOKORO_URL?: string;
+  readonly VITE_KOKORO_VOICE?: string;
+  readonly VITE_PIPER_URL?: string;
+  readonly VITE_ELEVENLABS_APIKEY?: string;
+  readonly VITE_ELEVENLABS_VOICEID?: string;
+  readonly VITE_ELEVENLABS_MODEL?: string;
+  readonly VITE_SPEECHT5_SPEAKER_EMBEDDING_URL?: string;
+  readonly VITE_COQUI_APIKEY?: string;
+  readonly VITE_COQUI_VOICEID?: string;
+  readonly VITE_AMICA_LIFE_ENABLED?: string;
+  readonly VITE_REASONING_ENGINE_ENABLED?: string;
+  readonly VITE_REASONING_ENGINE_URL?: string;
+  readonly VITE_EXTERNAL_API_ENABLED?: string;
+  readonly VITE_X_API_KEY?: string;
+  readonly VITE_X_API_SECRET?: string;
+  readonly VITE_X_ACCESS_TOKEN?: string;
+  readonly VITE_X_ACCESS_SECRET?: string;
+  readonly VITE_X_BEARER_TOKEN?: string;
+  readonly VITE_TELEGRAM_BOT_TOKEN?: string;
+  readonly VITE_NAME?: string;
+  readonly VITE_SYSTEM_PROMPT?: string;
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
 }

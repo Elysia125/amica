@@ -1,17 +1,15 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { IconButton } from '@/components/iconButton';
-import { useRouter } from 'next/router';
+import { useNavigate } from 'react-router-dom';
 
-export default function Import() {
+export default function ImportPage() {
   const { t } = useTranslation();
-
   const [sqid, setSqid] = useState('');
-
-  const router = useRouter();
+  const navigate = useNavigate();
 
   const handleCloseIcon = () => {
-    router.push('/');
+    navigate('/');
   };
 
   return (
@@ -55,7 +53,7 @@ export default function Import() {
               <div className="sm:col-span-3 max-w-md rounded-xl mt-2">
                 <button
                   onClick={() => {
-                    window.location.href = `/import/${sqid}`;
+                    navigate(`/import/${sqid}`);
                   }}
                   className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-fuchsia-500 hover:bg-fuchsia-600 focus:outline-none disabled:bg-fuschia-300 disabled:cursor-not-allowed disabled:opacity-50"
                   disabled={sqid === ''}

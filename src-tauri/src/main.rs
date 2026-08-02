@@ -28,7 +28,7 @@ async fn create_pet_window(app: tauri::AppHandle) -> Result<(), String> {
         return Ok(());
     }
 
-    WebviewWindowBuilder::new(&app, "pet", tauri::WebviewUrl::App("/pet".into()))
+    WebviewWindowBuilder::new(&app, "pet", tauri::WebviewUrl::App("/pet.html".into()))
         .title("Amica Pet")
         .inner_size(400.0, 600.0)
         .decorations(false)

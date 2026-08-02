@@ -50,7 +50,7 @@ function PetInner() {
     document.body.style.backgroundImage = "none";
     document.body.style.margin = "0";
     document.body.style.padding = "0";
-    const nextRoot = document.getElementById("__next");
+    const nextRoot = document.getElementById("root");
     if (nextRoot) {
       nextRoot.style.backgroundColor = "transparent";
     }
@@ -174,7 +174,7 @@ function PetInner() {
   return (
     <>
       <style>{`
-        html, body, #__next {
+        html, body, #root {
           background: transparent !important;
           margin: 0 !important;
           padding: 0 !important;
@@ -192,7 +192,7 @@ function PetInner() {
         {/* 3D角色展示区 (满铺画布) */}
         <VrmViewer chatMode={false} />
 
-        {/* 
+        {/*
           [侧边气泡] 判断代码开关 ENABLE_CHAT_BUBBLE 是否开启
         */}
         {ENABLE_CHAT_BUBBLE && (
@@ -231,7 +231,7 @@ function PetInner() {
           </div>
         )}
 
-        {/* 
+        {/*
           [简洁的输入框] 只需按 Enter 呼出/发送
         */}
         {inputVisible && (

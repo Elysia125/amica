@@ -1,15 +1,10 @@
 import {
-  Fragment,
   useContext,
   useEffect,
   useRef,
   useState,
 } from "react";
-import Link from "next/link";
-import { Menu, Transition } from '@headlessui/react'
-import { clsx } from "clsx";
-import { M_PLUS_2, Montserrat } from "next/font/google";
-import { useTranslation, Trans } from 'react-i18next';
+import { useTranslation } from 'react-i18next';
 import {
   ArrowsPointingInIcon,
   ArrowsPointingOutIcon,
@@ -17,19 +12,13 @@ import {
   ChatBubbleLeftRightIcon,
   CloudArrowDownIcon,
   CodeBracketSquareIcon,
-  CubeIcon,
-  CubeTransparentIcon,
-  LanguageIcon,
   ShareIcon,
   SpeakerWaveIcon,
   SpeakerXMarkIcon,
-  Squares2X2Icon,
-  SquaresPlusIcon,
   VideoCameraIcon,
   VideoCameraSlashIcon,
   WrenchScrewdriverIcon,
   SignalIcon,
-  AcademicCapIcon,
 } from "@heroicons/react/24/outline";
 import { IconBrain } from '@tabler/icons-react';
 
@@ -58,49 +47,26 @@ import { AlertContext } from "@/features/alert/alertContext";
 import { config, updateConfig } from '@/utils/config';
 import { isTauri } from '@/utils/isTauri';
 import { invoke } from "@tauri-apps/api/core";
-import { langs } from '@/i18n/langs';
 import { VrmStoreProvider } from "@/features/vrmStore/vrmStoreContext";
 import { AmicaLifeContext } from "@/features/amicaLife/amicaLifeContext";
 import { ChatModeText } from "@/components/chatModeText";
 
 import { TimestampedPrompt } from "@/features/amicaLife/eventHandler";
-import { handleChatLogs } from "@/features/externalAPI/externalAPI";
 import { VerticalSwitchBox } from "@/components/switchBox";
 import { ThoughtText } from "@/components/thoughtText";
 
-const m_plus_2 = M_PLUS_2({
-  variable: "--font-m-plus-2",
-  display: "swap",
-  preload: false,
-});
-
-const montserrat = Montserrat({
-  variable: "--font-montserrat",
-  display: "swap",
-  subsets: ["latin"],
-});
-
 function detectVRHeadset() {
   const userAgent = navigator.userAgent.toLowerCase();
-
-  // Meta Quest detection
-  // Quest 2 and 3 both use "oculus" in their user agent
   const isQuest = userAgent.includes('oculus') ||
                   userAgent.includes('quest 2') ||
                   userAgent.includes('quest 3');
-
-  // Vision Pro detection
-  // visionOS is the specific identifier for Apple Vision Pro
   const isVisionPro = userAgent.includes('visionos') ||
                       userAgent.includes('xros');
-
-  // Detailed device information
   let deviceInfo = {
     isVRDevice: isQuest || isVisionPro,
     deviceType: '',
     browserInfo: userAgent
   };
-
   if (isQuest) {
     deviceInfo.deviceType = 'quest-3';
     if (userAgent.includes('quest 3')) {
@@ -111,12 +77,11 @@ function detectVRHeadset() {
   } else if (isVisionPro) {
     deviceInfo.deviceType = 'vision-pro';
   }
-
   return deviceInfo;
 }
 
 
-export default function Home() {
+export default function HomePage() {
   const { t, i18n } = useTranslation();
   const currLang = i18n.resolvedLanguage;
   const { viewer } = useContext(ViewerContext);
@@ -132,11 +97,7 @@ export default function Home() {
   const [thoughtMessage, setThoughtMessage] = useState("");
   const [shownMessage, setShownMessage] = useState<Role>("system");
   const [subconciousLogs, setSubconciousLogs] = useState<TimestampedPrompt[]>([]);
-
-  // showContent exists to allow ssr
-  // otherwise issues from usage of localStorage and window will occur
   const [showContent, setShowContent] = useState(false);
-
   const [showArbiusIntroduction, setShowArbiusIntroduction] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showChatLog, setShowChatLog] = useState(false);
@@ -144,19 +105,14 @@ export default function Home() {
   const [showChatMode, setShowChatMode] = useState(false);
   const [showSubconciousText, setShowSubconciousText] = useState(false);
   const [showMoshi, setShowMoshi] = useState(false);
-
-  // null indicates havent loaded config yet
   const [muted, setMuted] = useState<boolean|null>(null);
   const [webcamEnabled, setWebcamEnabled] = useState(false);
   const [showLanguageSelector, setShowLanguageSelector] = useState(false);
-
   const [showStreamWindow, setShowStreamWindow] = useState(false);
   const [isPetDetached, setIsPetDetached] = useState(false);
   const videoRef = useRef(null);
-
   const [isARSupported, setIsARSupported] = useState(false);
   const [isVRSupported, setIsVRSupported] = useState(false);
-
   const [isVRHeadset, setIsVRHeadset] = useState(false);
 
 
@@ -176,20 +132,6 @@ export default function Home() {
     } else {
       document.body.style.backgroundImage = `url(${config("bg_url")})`;
     }
-    // Temp Disable : WebXR
-    // if (window.navigator.xr && window.navigator.xr.isSessionSupported) {
-    //   let deviceInfo = detectVRHeadset();
-    //   setIsVRHeadset(deviceInfo.isVRDevice);
-
-    //   window.navigator.xr.isSessionSupported('immersive-ar').then((supported) => {
-    //     console.log('ar supported', supported);
-    //     setIsARSupported(supported);
-    //   });
-    //   window.navigator.xr.isSessionSupported('immersive-vr').then((supported) => {
-    //     console.log('vr supported', supported);
-    //     setIsVRSupported(supported);
-    //   });
-    // }
   }, []);
 
   useEffect(() => {
@@ -206,27 +148,27 @@ export default function Home() {
   }
 
   const toggleState = (
-    setFunc: React.Dispatch<React.SetStateAction<boolean>>, 
+    setFunc: React.Dispatch<React.SetStateAction<boolean>>,
     deps: React.Dispatch<React.SetStateAction<boolean>>[],
   ) => {
     setFunc(prev => {
       if (!prev) {
         deps.forEach(dep => dep(false));
-      } 
+      }
       return !prev;
     });
   };
-  
+
   const toggleChatLog = () => {
     toggleState(setShowChatLog, [setShowSubconciousText, setShowChatMode]);
   };
-  
+
   const toggleShowSubconciousText = () => {
     if (subconciousLogs.length !== 0) {
       toggleState(setShowSubconciousText, [setShowChatLog, setShowChatMode]);
     }
   };
-  
+
   const toggleChatMode = () => {
     toggleState(setShowChatMode, [setShowChatLog, setShowSubconciousText]);
   };
@@ -258,7 +200,6 @@ export default function Home() {
       return;
     }
 
-    // TODO should hand tracking be required?
     let optionalFeatures: string[] = [
       'hand-tracking',
       'local-floor',
@@ -278,7 +219,6 @@ export default function Home() {
       try {
         await viewer.currentSession.end();
       } catch (err) {
-        // some times session already ended not due to user interaction
         console.warn(err);
       }
 
@@ -306,9 +246,7 @@ export default function Home() {
     } catch (err) {
       console.error(err);
     }
-
   }
-
 
   useEffect(() => {
     bot.initialize(
@@ -324,8 +262,6 @@ export default function Home() {
       setChatSpeaking,
     );
 
-    // TODO remove in future
-    // this change was just to make naming cleaner
     if (config("tts_backend") === 'openai') {
       updateConfig("tts_backend", "openai_tts");
     }
@@ -340,24 +276,15 @@ export default function Home() {
     );
   }, [amicaLife, bot, viewer]);
 
-  useEffect(() => {
-    handleChatLogs(chatLog);
-  }, [chatLog]);
-
-  // this exists to prevent build errors with ssr
   useEffect(() => setShowContent(true), []);
-  if (!showContent) return <></>;
+  if (!showContent) return null;
 
   return (
-    <div className={clsx(
-      m_plus_2.variable,
-      montserrat.variable,
-    )}>
-      {showStreamWindow && 
-
+    <div>
+      {showStreamWindow &&
       <div className="fixed top-1/3 right-4 w-[200px] h-[150px] z-0">
         <video
-          ref={videoRef} 
+          ref={videoRef}
           autoPlay
           muted
           playsInline
@@ -391,7 +318,7 @@ export default function Home() {
           />
         )}
       </VrmStoreProvider>
-      
+
       <MessageInputContainer isChatProcessing={chatProcessing} />
 
       {/* main menu */}
@@ -456,14 +383,14 @@ export default function Home() {
             <MenuButton
               large={isVRHeadset}
               icon={ShareIcon}
-              href="/share"
+              href="#/share"
               target={isTauri() ? '' : '_blank'}
               label="share"
             />
             <MenuButton
               large={isVRHeadset}
               icon={CloudArrowDownIcon}
-              href="/import"
+              href="#/import"
               label="import"
             />
 
@@ -501,48 +428,12 @@ export default function Home() {
               />
             )}
 
-            {/* Temp Disable : WebXR */}
-            {/*<MenuButton
-              large={isVRHeadset}
-              icon={CubeTransparentIcon}
-              disabled={!isARSupported}
-              onClick={() => toggleXR('immersive-ar')}
-              label="Augmented Reality"
-            />
-
-            <MenuButton
-              large={isVRHeadset}
-              icon={CubeIcon}
-              disabled={!isVRSupported}
-              onClick={() => toggleXR('immersive-vr')}
-              label="Virtual Reality"
-            />*/}
-
             <MenuButton
               large={isVRHeadset}
               icon={CodeBracketSquareIcon}
               onClick={() => setShowDebug(true)}
               label="debug"
             />
-
-            {/* Temp Disable : WebXR */}
-            {/* { showChatMode ? (
-              <MenuButton
-                large={isVRHeadset}
-                icon={Squares2X2Icon}
-                disabled={viewer.currentSession !== null}
-                onClick={toggleChatMode}
-                label="hide chat mode"
-              />
-            ) : (
-              <MenuButton
-                large={isVRHeadset}
-                icon={SquaresPlusIcon}
-                disabled={viewer.currentSession !== null}
-                onClick={toggleChatMode}
-                label="show chat mode"
-              />
-            )} */}
 
             <div className="flex flex-row items-center space-x-2">
                 <VerticalSwitchBox
@@ -567,9 +458,9 @@ export default function Home() {
                 />
               )}
             </div>
-            
+
           </div>
-        </div>    
+        </div>
       </div>
 
       {showChatLog && <ChatLog messages={chatLog} />}

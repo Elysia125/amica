@@ -7,27 +7,27 @@ import {
 import { Message } from "../chat/messages";
 
 export const configUrl = new URL(
-  `${process.env.NEXT_PUBLIC_DEVELOPMENT_BASE_URL}/api/dataHandler`,
+  `${import.meta.env.VITE_DEVELOPMENT_BASE_URL}/api/dataHandler`,
 );
 configUrl.searchParams.append("type", "config");
 
 export const userInputUrl = new URL(
-  `${process.env.NEXT_PUBLIC_DEVELOPMENT_BASE_URL}/api/dataHandler`,
+  `${import.meta.env.VITE_DEVELOPMENT_BASE_URL}/api/dataHandler`,
 );
 userInputUrl.searchParams.append("type", "userInputMessages");
 
 export const subconsciousUrl = new URL(
-  `${process.env.NEXT_PUBLIC_DEVELOPMENT_BASE_URL}/api/dataHandler`,
+  `${import.meta.env.VITE_DEVELOPMENT_BASE_URL}/api/dataHandler`,
 );
 subconsciousUrl.searchParams.append("type", "subconscious");
 
 export const logsUrl = new URL(
-  `${process.env.NEXT_PUBLIC_DEVELOPMENT_BASE_URL}/api/dataHandler`,
+  `${import.meta.env.VITE_DEVELOPMENT_BASE_URL}/api/dataHandler`,
 );
 logsUrl.searchParams.append("type", "logs");
 
 export const chatLogsUrl = new URL(
-  `${process.env.NEXT_PUBLIC_DEVELOPMENT_BASE_URL}/api/dataHandler`,
+  `${import.meta.env.VITE_DEVELOPMENT_BASE_URL}/api/dataHandler`,
 );
 chatLogsUrl.searchParams.append("type", "chatLogs");
 
