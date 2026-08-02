@@ -109,7 +109,7 @@ export default function HomePage() {
   const [webcamEnabled, setWebcamEnabled] = useState(false);
   const [showLanguageSelector, setShowLanguageSelector] = useState(false);
   const [showStreamWindow, setShowStreamWindow] = useState(false);
-  const [isPetDetached, setIsPetDetached] = useState(false);
+  const [isPetDetached, setIsPetDetached] = useState(isTauri());
   const videoRef = useRef(null);
   const [isARSupported, setIsARSupported] = useState(false);
   const [isVRSupported, setIsVRSupported] = useState(false);

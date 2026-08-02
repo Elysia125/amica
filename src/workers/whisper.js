@@ -33,9 +33,8 @@ class PipelineFactory {
 self.addEventListener("message", async (event) => {
   const message = event.data;
 
-  // Do some work...
   // TODO use message data
-  let transcript = await transcribe(message.audio);
+  let transcript = await transcribe(message.audio, message.model);
   if (transcript === null) return;
 
   // Send the result back to the main thread
@@ -48,30 +47,22 @@ self.addEventListener("message", async (event) => {
 
 class AutomaticSpeechRecognitionPipelineFactory extends PipelineFactory {
   static task = "automatic-speech-recognition";
-  // TODO load this from config
-  static model = "Xenova/whisper-tiny.en";
-  // static model = "distil-whisper/distil-medium.en";
+  static model = null; // 由主线程传入，不再硬编码
   static quantized = true;
 }
 
-const transcribe = async (audio) => {
-  // TODO use subtask and language
-
-  // TODO load from config
+const transcribe = async (audio, modelName) => {
   const p = AutomaticSpeechRecognitionPipelineFactory;
-  /*
-   * TODO invalidate model if different
-   * check p.model !== modelName || p.quantized !== quantized) {
-    // Invalidate model if different
-    p.model = modelName;
-    p.quantized = quantized;
+  const quantized = true;
 
+  // 模型名变化时，释放旧模型实例
+  if (p.model !== null && p.model !== modelName) {
     if (p.instance !== null) {
       (await p.getInstance()).dispose();
       p.instance = null;
     }
   }
-  */
+  p.model = modelName || "Xenova/whisper-small";
 
   // Load transcriber model
   let transcriber = await p.getInstance((data) => {

@@ -7,6 +7,8 @@ import { animationList } from "@/paths";
 import { updateConfig } from "@/utils/config";
 import { loadMixamoAnimation } from "@/lib/VRMAnimation/loadMixamoAnimation";
 import { loadVRMAnimation } from "@/lib/VRMAnimation/loadVRMAnimation";
+import { isTauri } from "@/utils/isTauri";
+import { invoke } from "@tauri-apps/api/core";
 
 export function CharacterAnimationPage({
   viewer,
@@ -39,6 +41,7 @@ export function CharacterAnimationPage({
               onChange={(value: boolean) => {
                 setAnimationProcedural(value);
                 updateConfig("animation_procedural", value.toString());
+                if (isTauri()) invoke('emit_procedural_animation_changed', { enabled: value });
                 setSettingsUpdated(true);
               }}
             />
@@ -63,6 +66,7 @@ export function CharacterAnimationPage({
 
                 // @ts-ignore
                 viewer.model!.loadAnimation(animation);
+                if (isTauri()) invoke('emit_animation_changed', { url });
                 requestAnimationFrame(() => {
                   viewer.resetCamera()
                 });

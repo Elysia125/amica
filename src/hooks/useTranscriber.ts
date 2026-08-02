@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { useWorker } from "./useWorker";
 import { updateFileProgress } from "@/utils/progress";
+import { config } from "@/utils/config";
 
 interface ProgressItem {
   file: string;
@@ -131,6 +132,7 @@ export function useTranscriber(): Transcriber {
 
         webWorker.postMessage({
           audio,
+          model: config("whisper_browser_model"),
         });
       }
     },

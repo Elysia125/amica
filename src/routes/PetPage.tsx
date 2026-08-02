@@ -6,6 +6,8 @@ import { listen } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { PhysicalSize } from "@tauri-apps/api/dpi";
 import { buildUrl } from "@/utils/buildUrl";
+import { loadMixamoAnimation } from "@/lib/VRMAnimation/loadMixamoAnimation";
+import { loadVRMAnimation } from "@/lib/VRMAnimation/loadVRMAnimation";
 
 function PetInner() {
   const { viewer } = useContext(ViewerContext);
@@ -83,6 +85,34 @@ function PetInner() {
     const unlisten = listen<{ url: string }>("vrm-changed", async (event) => {
       await viewer.loadVrm(buildUrl(event.payload.url), () => { });
       onModelReady();
+    });
+    return () => {
+      unlisten.then((fn) => fn());
+    };
+  }, [viewer]);
+
+  useEffect(() => {
+    const unlisten = listen<{ url: string }>("animation-changed", async (event) => {
+      if (!viewer.model?.vrm) return;
+      const url = event.payload.url;
+      const animation = url.indexOf("vrma") > 0
+        ? await loadVRMAnimation(url)
+        : await loadMixamoAnimation(url, viewer.model.vrm);
+      if (animation) {
+        viewer.model.loadAnimation(animation);
+      }
+    });
+    return () => {
+      unlisten.then((fn) => fn());
+    };
+  }, [viewer]);
+
+  useEffect(() => {
+    const unlisten = listen<{ enabled: boolean }>("procedural-animation-changed", async (event) => {
+      if (!viewer.model?.vrm) return;
+      if (event.payload.enabled) {
+        viewer.model.vrm.humanoid.resetNormalizedPose();
+      }
     });
     return () => {
       unlisten.then((fn) => fn());

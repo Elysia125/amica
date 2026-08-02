@@ -2,6 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconEvent};
+use tauri::Emitter;
 use tauri::Manager;
 use tauri::{
     menu::MenuBuilder ,
@@ -11,13 +12,12 @@ use tauri::{
 use tauri_plugin_opener::OpenerExt;
 
 #[tauri::command]
-async fn close_splashscreen(window: tauri::WebviewWindow) {
-    if let Some(splash) = window.get_webview_window("splashscreen") {
+async fn close_splashscreen(app: tauri::AppHandle) {
+    if let Some(splash) = app.get_webview_window("splashscreen") {
         let _ = splash.close();
     }
-    if let Some(main) = window.get_webview_window("main") {
-        let _ = main.show();
-    }
+    // 启动时只显示桌宠，主控制面板保持隐藏（托盘点击才显示）
+    let _ = create_pet_window(app).await;
 }
 
 #[tauri::command]
@@ -50,6 +50,24 @@ async fn close_pet_window(app: tauri::AppHandle) -> Result<(), String> {
         let _ = pet.close();
     }
     Ok(())
+}
+
+#[tauri::command]
+async fn emit_vrm_changed(app: tauri::AppHandle, url: String) -> Result<(), String> {
+    app.emit("vrm-changed", serde_json::json!({ "url": url }))
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn emit_animation_changed(app: tauri::AppHandle, url: String) -> Result<(), String> {
+    app.emit("animation-changed", serde_json::json!({ "url": url }))
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn emit_procedural_animation_changed(app: tauri::AppHandle, enabled: bool) -> Result<(), String> {
+    app.emit("procedural-animation-changed", serde_json::json!({ "enabled": enabled }))
+        .map_err(|e| e.to_string())
 }
 
 fn main() {
@@ -150,12 +168,21 @@ fn main() {
                 }
             });
 
+            // 启动时自动创建桌宠窗口（主控制面板保持隐藏）
+            let app_handle = app.handle().clone();
+            tauri::async_runtime::spawn(async move {
+                let _ = create_pet_window(app_handle).await;
+            });
+
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
             close_splashscreen,
             create_pet_window,
-            close_pet_window
+            close_pet_window,
+            emit_vrm_changed,
+            emit_animation_changed,
+            emit_procedural_animation_changed
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

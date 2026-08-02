@@ -6,7 +6,7 @@ import { AddItemCallbackType, VrmStoreActionType, vrmStoreReducer } from "./vrmS
 import { Viewer } from "../vrmViewer/viewer";
 import { config, updateConfig } from "@/utils/config";
 import { isTauri } from "@/utils/isTauri";
-import { emit } from "@tauri-apps/api/event";
+import { invoke } from "@tauri-apps/api/core";
 
 interface VrmStoreContextType {
     getCurrentVrm: () => VrmData | undefined;
@@ -40,7 +40,7 @@ export const VrmStoreProvider = ({ children }: PropsWithChildren<{}>): JSX.Eleme
                 updateConfig("vrm_url", callbackProp.url);
                 updateConfig("vrm_hash", callbackProp.hash);
                 updateConfig("vrm_save_type", "local");
-                if (isTauri()) emit('vrm-changed', { url: callbackProp.url });
+                if (isTauri()) invoke('emit_vrm_changed', { url: callbackProp.url });
                 viewer.getScreenshotBlob((thumbBlob: Blob | null) => {
                   if (!thumbBlob) return;
                   vrmListDispatch({ type: VrmStoreActionType.updateVrmThumb, url: callbackProp.url, thumbBlob, vrmList: callbackProp.vrmList, callback: (updatedThumbVrmList: VrmData[]) => {
