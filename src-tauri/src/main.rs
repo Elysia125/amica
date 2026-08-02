@@ -1,12 +1,13 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use tauri::tray::{MouseButton, MouseButtonState, TrayIconEvent};
+use tauri::Manager;
 use tauri::{
-    menu::{MenuBuilder, MenuItemBuilder, PredefinedMenuItem},
+    menu::MenuBuilder ,
     tray::TrayIconBuilder,
     WebviewWindowBuilder,
 };
-use tauri::Manager;
 use tauri_plugin_opener::OpenerExt;
 
 #[tauri::command]
@@ -58,38 +59,104 @@ fn main() {
             let icon = app.default_window_icon().cloned().unwrap();
 
             let menu = MenuBuilder::new(app)
-                .item(&MenuItemBuilder::with_id("checkforupdates", "Check for updates").build(app)?)
-                .item(&PredefinedMenuItem::separator(app)?)
-                .item(&MenuItemBuilder::with_id("help", "Help").build(app)?)
-                .item(&PredefinedMenuItem::separator(app)?)
-                .item(&MenuItemBuilder::with_id("quit", "Quit").build(app)?)
+                .text("show", "Show")
+                .separator()
+                .text("checkforupdates", "Check for updates")
+                .separator()
+                .text("help", "Help")
+                .separator()
+                .text("quit", "Quit")
                 .build()?;
 
-            let _tray = TrayIconBuilder::new()
+            let main_window = app.get_webview_window("main").unwrap();
+            let main_for_tray = main_window.clone();
+            let main_for_close = main_window.clone();
+
+            // Tray: left-click → show main, right-click → menu
+            let _ = TrayIconBuilder::new()
                 .icon(icon)
                 .menu(&menu)
                 .tooltip("Amica")
-                .on_menu_event(|app, event| {
-                    match event.id().as_ref() {
-                        "quit" => {
-                            std::process::exit(0);
+                .show_menu_on_left_click(false)
+                .on_tray_icon_event(move |_tray, event| {
+                    match event {
+                        // 监听左键抬起事件（相当于一次完整的单击）
+                        TrayIconEvent::Click {
+                            button: MouseButton::Left,
+                            button_state: MouseButtonState::Up,
+                            ..
+                        } => {
+                            println!("托盘左键被点击");
+
+                            let _ = main_for_tray.show();
+                            let _ = main_for_tray.set_focus();
                         }
-                        "checkforupdates" => {
-                            let url = "https://github.com/semperai/amica/releases/latest";
-                            app.opener().open_url(url, None::<&str>).expect("failed to open url");
+
+                        // 监听右键抬起事件
+                        TrayIconEvent::Click {
+                            button: MouseButton::Right,
+                            button_state: MouseButtonState::Up,
+                            ..
+                        } => {
+                            println!("托盘右键被点击");
+
+                            // 注意：如果你使用了 `.menu(&your_menu)` 绑定了菜单，
+                            // 右键抬起时操作系统会自动接管并弹出菜单。
+                            // 但你依然可以在这里执行一些额外的逻辑，例如日志记录等。
                         }
-                        "help" => {
-                            let url = "https://docs.heyamica.com";
-                            app.opener().open_url(url, None::<&str>).expect("failed to open url");
+
+                        // 可选：监听双击等其他事件
+                        TrayIconEvent::DoubleClick {
+                            button: MouseButton::Left,
+                            ..
+                        } => {
+                            println!("托盘左键被双击");
                         }
-                        _ => {}
+
+                        _ => {} // 忽略其他未匹配事件
                     }
+                })
+                .on_menu_event(|app, event| match event.id().as_ref() {
+                    "quit" => {
+                        std::process::exit(0);
+                    }
+                    "checkforupdates" => {
+                        let url = "https://github.com/semperai/amica/releases/latest";
+                        app.opener()
+                            .open_url(url, None::<&str>)
+                            .expect("failed to open url");
+                    }
+                    "help" => {
+                        let url = "https://docs.heyamica.com";
+                        app.opener()
+                            .open_url(url, None::<&str>)
+                            .expect("failed to open url");
+                    }
+                    "show" => {
+                        if let Some(main) = app.get_webview_window("main") {
+                            let _ = main.show();
+                            let _ = main.set_focus();
+                        }
+                    }
+                    _ => {}
                 })
                 .build(app)?;
 
+            // X button → hide instead of close (so tray can bring it back)
+            main_window.on_window_event(move |event| {
+                if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                    api.prevent_close();
+                    let _ = main_for_close.hide();
+                }
+            });
+
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![close_splashscreen, create_pet_window, close_pet_window])
+        .invoke_handler(tauri::generate_handler![
+            close_splashscreen,
+            create_pet_window,
+            close_pet_window
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
